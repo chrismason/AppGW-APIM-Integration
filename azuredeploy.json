@@ -208,9 +208,7 @@
             "dependsOn": [
                 "Microsoft.Resources/deployments/BuildOrUpdateAPIMNetworking"
             ],
-            "tags": {
-                "displayName": "Deploy API Management"
-            },
+            "tags": {},
             "sku": {
                 "name": "[parameters('apiManagementSku')]",
                 "capacity": "[parameters('apiManagementSkuCount')]"
@@ -267,9 +265,6 @@
                     },
                     "vnetResourceName": {
                         "value": "[parameters('vnetResourceName')]"
-                    },
-                    "vnetAddressRange": {
-                        "value": "[parameters('vnetAddressRange')]"
                     },
                     "apiManagementSubnetName": {
                         "value": "[parameters('apiManagementSubnetName')]"
