@@ -1,0 +1,300 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "location": {
+            "type": "string",
+            "defaultValue": "[resourceGroup().location]",
+            "metadata": {
+                "description": "The location for all resources"
+            }
+        },
+        "vnetResourceName": {
+            "type": "string",
+            "defaultValue": "GET-VNET-NAME",
+            "metadata": {
+                "description": "The name of the VNet"
+            }
+        },
+        "vnetAddressRange": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/16",
+            "metadata": {
+                "description": "The address range for the VNet"
+            }
+        },
+        "apiManagementSubnetName": {
+            "type": "string",
+            "defaultValue": "GEN-VNET-SUBNET1-NAME",
+            "metadata": {
+                "description": "The name of the API Management subnet"
+            }
+        },
+        "apiManagementSubnetRange": {
+            "type": "string",
+            "defaultValue": "10.0.0.0/24",
+            "metadata": {
+                "description": "Address range used by API Management"
+            }
+        },
+        "appGWSubnetName": {
+            "type": "string",
+            "defaultValue": "GEN-VNET-SUBNET2-NAME",
+            "metadata": {
+                "description": "The name of the App Gateway subnet"
+            }
+        },
+        "appGWSubnetRange": {
+            "type": "string",
+            "defaultValue": "10.0.1.0/24",
+            "metadata": {
+                "description": "Address range used by the App Gateway"
+            }
+        },
+        "apiManagementResourceName": {
+            "type": "string",
+            "defaultValue": "[concat('apiservice-', uniqueString(resourceGroup().id))]",
+            "metadata": {
+                "description": "The name of the API Management resource"
+            }
+        },
+        "apiManagementGatewayCustomDomain": {
+            "type": "string",
+            "defaultValue": "apis.masondemos.com",
+            "metadata": {
+                "description": "Custom domain used by the gateway / proxy of the API Management instance"
+            }
+        },
+        "apiManagementPortalCustomDomain": {
+            "type": "string",
+            "defaultValue": "apisportal.masondemos.com",
+            "metadata": {
+                "description": "Custom domain used by the developer portal of the API Management instance"
+            }
+        },
+        "apiManagementPublisherEmail": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The email address of the owner of the service"
+            }
+        },
+        "apiManagementPublisherName": {
+            "type": "string",
+            "minLength": 1,
+            "metadata": {
+                "description": "The name of the owner of the service"
+            }
+        },
+        "apiManagementSku": {
+            "type": "string",
+            "allowedValues": [
+                "Developer",
+                "Premium"
+            ],
+            "defaultValue": "Developer",
+            "metadata": {
+                "description": "The pricing tier of this API Management service (needs either Developer or Premium for VNet integration)"
+            }
+        },
+        "apiManagementSkuCount": {
+            "type": "int",
+            "defaultValue": 1,
+            "metadata": {
+                "description": "The instance size of this API Management service."
+            }
+        },
+        "appGWResourceName": {
+            "type": "string",
+            "defaultValue": "[concat('appgw-', uniqueString(resourceGroup().id))]",
+            "metadata": {
+                "description": "The name of the App GW resource"
+            }
+        },
+        "existingKeyVaultName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the existing Key Vault resource"
+            }
+        },
+        "existingKeyVaultSecret": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the private certificate loaded into Key Vault"
+            }
+        },
+        "trustedRootBase64PublicKey": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The base-64 representation of the public key of the trusted root certificate for the custom domain"
+            }
+        },
+        "tags": {
+            "type": "object",
+            "defaultValue": {},
+            "metadata": {
+                "description": "The collection of resource tags passed from parameters file"
+            }
+        },
+        "_artifactsLocation": {
+            "type": "string",
+            "defaultValue": "https://raw.githubusercontent.com/masonch/appgw-apim-integration/master/",
+            "metadata": {
+                "description": "The location of resources, such as templates and DSC modules, that the template depends on"
+            }
+        },
+        "_artifactsLocationSasToken": {
+            "type": "securestring",
+            "defaultValue": "",
+            "metadata": {
+                "description": "The sasToken required to access _artifactsLocation.  When the template is deployed using the accompanying scripts, a sasToken will be automatically generated."
+            }
+        }
+    },
+    "variables": {
+        "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetResourceName'))]",
+        "apimSubnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetResourceName'), parameters('apiManagementSubnetName'))]",
+        "vnetNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken')))]",
+        "apimNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/update-apim-with-keyvault.json', parameters('_artifactsLocationSasToken')))]",
+        "apimServiceIdentityResourceId": "[concat(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "BuildOrUpdateAPIMNetworking",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('vnetNestedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "vnetResourceName": {
+                        "value": "[parameters('vnetResourceName')]"
+                    },
+                    "vnetAddressRange": {
+                        "value": "[parameters('vnetAddressRange')]"
+                    },
+                    "apiManagementSubnetName": {
+                        "value": "[parameters('apiManagementSubnetName')]"
+                    },
+                    "apimanagementSubnetRange": {
+                        "value": "[parameters('apiManagementSubnetRange')]"
+                    },
+                    "appGWSubnetName": {
+                        "value": "[parameters('appGWSubnetName')]"
+                    },
+                    "appGWSubnetRange": {
+                        "value": "[parameters('appGWSubnetRange')]"
+                    },
+                    "tags": {
+                        "value": "[parameters('tags')]"
+                    }
+                }
+            }
+        },
+        {
+            "type": "Microsoft.ApiManagement/service",
+            "apiVersion": "2018-06-01-preview",
+            "name": "[parameters('apiManagementResourceName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[variables('apimSubnetResourceId')]"
+            ],
+            "tags": {
+                "displayName": "Deploy API Management"
+            },
+            "sku": {
+                "name": "[parameters('apiManagementSku')]",
+                "capacity": "[parameters('apiManagementSkuCount')]"
+            },
+            "properties": {
+                "publisherEmail": "[parameters('apiManagementPublisherEmail')]",
+                "publisherName": "[parameters('apiManagementPublisherName')]",
+                "virtualNetworkType": "Internal",
+                "virtualNetworkConfiguration": {
+                    "subnetResourceId": "[variables('apimSubnetResourceId')]"
+                }
+            },
+            "identity": {
+                "type": "SystemAssigned"
+            }
+        },
+        {
+            "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "name": "[concat(parameters('existingKeyVaultName'), '/add')]",
+            "apiVersion": "2015-06-01",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]"
+            ],
+            "properties": {
+                "accessPolicies": [
+                    {
+                        "tenantId": "[reference(variables('apimServiceIdentityResourceId'), '2015-08-31-PREVIEW').tenantId]",
+                        "objectId": "[reference(variables('apimServiceIdentityResourceId'), '2015-08-31-PREVIEW').principalId]",
+                        "permissions": {
+                            "secrets": [
+                                "get"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2018-05-01",
+            "name": "UpdateAPIMCertificates",
+            "dependsOn": [
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "uri": "[variables('apimNestedTemplateUri')]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
+                    "vnetResourceName": {
+                        "value": "[parameters('vnetResourceName')]"
+                    },
+                    "vnetAddressRange": {
+                        "value": "[parameters('vnetAddressRange')]"
+                    },
+                    "apiManagementSubnetName": {
+                        "value": "[parameters('apiManagementSubnetName')]"
+                    },
+                    "apiManagementGatewayCustomDomain": {
+                        "value": "[parameters('apiManagementGatewayCustomDomain')]"
+                    },
+                    "apiManagementPortalCustomDomain": {
+                        "value": "[parameters('apiManagementPortalCustomDomain')]"
+                    },
+                    "apiManagementPublisherEmail": {
+                        "value": "[parameters('apiManagementPublisherEmail')]"
+                    },
+                    "apiManagementPublisherName": {
+                        "value": "[parameters('apiManagementPublisherName')]"
+                    },
+                    "apiManagementSku": {
+                        "value": "[parameters('apiManagementSku')]"
+                    },
+                    "apiManagementSkuCount": {
+                        "value": "[parameters('apiManagementSkuCount')]"
+                    }
+                }
+            }
+        }
+    ],
+    "outputs": {}
+}
