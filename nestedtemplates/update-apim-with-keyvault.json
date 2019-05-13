@@ -110,7 +110,7 @@
                     {
                         "hostName": "[parameters('apiManagementPortalCustomDomain')]",
                         "type": "Portal",
-                        "keyVaultId": ""
+                        "keyVaultId": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('existingKeyVaultName'), parameters('existingKeyVaultSecret'))).secretUri]"
                     }
                 ],
                 "virtualNetworkType": "Internal",
