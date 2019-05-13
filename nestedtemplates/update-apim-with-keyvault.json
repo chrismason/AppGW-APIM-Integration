@@ -105,12 +105,12 @@
                     {
                         "hostName": "[parameters('apiManagementGatewayCustomDomain')]",
                         "type": "Proxy",
-                        "keyVaultId": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('existingKeyVaultName'), parameters('existingKeyVaultSecret'))).secretUri]"
+                        "keyVaultId": "[concat('https://', parameters('existingKeyVaultName'), '.vault.azure.net/keys/', parameters('existingKeyVaultSecret'), '/')]"
                     },
                     {
                         "hostName": "[parameters('apiManagementPortalCustomDomain')]",
                         "type": "Portal",
-                        "keyVaultId": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('existingKeyVaultName'), parameters('existingKeyVaultSecret'))).secretUri]"
+                        "keyVaultId": "[concat('https://', parameters('existingKeyVaultName'), '.vault.azure.net/keys/', parameters('existingKeyVaultSecret'), '/')]"
                     }
                 ],
                 "virtualNetworkType": "Internal",
