@@ -206,7 +206,7 @@
             "name": "[parameters('apiManagementResourceName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[variables('apimSubnetResourceId')]"
+                "Microsoft.Resources/deployments/BuildOrUpdateAPIMNetworking"
             ],
             "tags": {
                 "displayName": "Deploy API Management"
