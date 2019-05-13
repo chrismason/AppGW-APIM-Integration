@@ -289,6 +289,12 @@
                     },
                     "apiManagementSkuCount": {
                         "value": "[parameters('apiManagementSkuCount')]"
+                    },
+                    "existingKeyVaultName": {
+                        "value": "[parameters('existingKeyVaultName')]"
+                    },
+                    "existingKeyVaultSecret": {
+                        "value": "[parameters('existingKeyVaultSecret')]"
                     }
                 }
             }

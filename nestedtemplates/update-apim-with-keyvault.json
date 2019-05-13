@@ -70,14 +70,12 @@
         },
         "existingKeyVaultName": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Name of the existing Key Vault resource"
             }
         },
         "existingKeyVaultSecret": {
             "type": "string",
-            "defaultValue": "",
             "metadata": {
                 "description": "Name of the private certificate loaded into Key Vault"
             }
