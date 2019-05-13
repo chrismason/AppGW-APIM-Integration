@@ -58,9 +58,7 @@
             "apiVersion": "2018-08-01",
             "name": "[parameters('vnetResourceName')]",
             "location": "[parameters('location')]",
-            "tags": {
-                "displayName": "[parameters('tags')]"
-            },
+            "tags": {},
             "properties": {
                 "addressSpace": {
                     "addressPrefixes": [

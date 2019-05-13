@@ -93,9 +93,7 @@
             "apiVersion": "2018-06-01-preview",
             "name": "[parameters('apiManagementResourceName')]",
             "location": "[parameters('location')]",
-            "tags": {
-                "displayName": "Deploy API Management"
-            },
+            "tags": {},
             "sku": {
                 "name": "[parameters('apiManagementSku')]",
                 "capacity": "[parameters('apiManagementSkuCount')]"

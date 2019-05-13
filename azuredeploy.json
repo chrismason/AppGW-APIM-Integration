@@ -269,6 +269,9 @@
                     "apiManagementSubnetName": {
                         "value": "[parameters('apiManagementSubnetName')]"
                     },
+                    "apiManagementResourceName": {
+                        "value": "[parameters('apiManagementResourceName')]"
+                    },
                     "apiManagementGatewayCustomDomain": {
                         "value": "[parameters('apiManagementGatewayCustomDomain')]"
                     },
