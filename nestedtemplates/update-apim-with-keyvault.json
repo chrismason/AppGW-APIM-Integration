@@ -105,7 +105,7 @@
                     {
                         "hostName": "[parameters('apiManagementGatewayCustomDomain')]",
                         "type": "Proxy",
-                        "keyVaultId": "[concat(reference(variables('keyVaultID')).vaultUri,'secrets/', parameters('existingKeyVaultSecret'))]"
+                        "keyVaultId": "[reference(resourceId('Microsoft.KeyVault/vaults/secrets', parameters('existingKeyVaultName'), parameters('existingKeyVaultSecret'))).secretUri]"
                     },
                     {
                         "hostName": "[parameters('apiManagementPortalCustomDomain')]",
