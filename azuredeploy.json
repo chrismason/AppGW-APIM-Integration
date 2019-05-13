@@ -157,11 +157,27 @@
     "variables": {
         "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetResourceName'))]",
         "apimSubnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetResourceName'), parameters('apiManagementSubnetName'))]",
+        "gwSubnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetResourceName'), parameters('appGWSubnetName'))]",
         "vnetNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken')))]",
         "apimNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/update-apim-with-keyvault.json', parameters('_artifactsLocationSasToken')))]",
-        "apimServiceIdentityResourceId": "[concat(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]"
+        "apimServiceIdentityResourceId": "[concat(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
+        "appGWPublicIPAddressName": "[concat(parameters('appGWResourceName'), '-pip')]",
+        "appGWPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appGWPublicIPAddressName'))]",
+        "appGWRefId": "[resourceId('Microsoft.Network/applicationGateways',parameters('appGWResourceName'))]"
     },
     "resources": [
+        {
+            "type": "Microsoft.Network/publicIPAddresses",
+            "apiVersion": "2018-10-01",
+            "name": "[variables('appGWPublicIPAddressName')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard"
+            },
+            "properties": {
+                "publicIPAllocationMethod": "Static"
+            }
+        },
         {
             "type": "Microsoft.Resources/deployments",
             "apiVersion": "2018-05-01",
@@ -297,6 +313,192 @@
                         "value": "[parameters('existingKeyVaultSecret')]"
                     }
                 }
+            }
+        },
+        {
+            "type": "Microsoft.Network/applicationGateways",
+            "apiVersion": "2018-10-01",
+            "name": "[parameters('appGWResourceName')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "Microsoft.Resources/deployments/BuildOrUpdateAPIMNetworking",
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('appGWPublicIPAddressName'))]",
+                "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+            ],
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "sku": {
+                    "name": "Standard_v2",
+                    "tier": "Standard_v2"
+                },
+                "autoscaleConfiguration": {
+                    "minCapacity": 2
+                },
+                "sslCertificates": [
+                    {
+                        "name": "appGatewaySslCert",
+                        "properties": {
+                            "keyVaultSecretId": "[concat('https://', parameters('existingKeyVaultName'), '.vault.azure.net/secrets/', parameters('existingKeyVaultSecret'), '/')]"
+                        }
+                    }
+                ],
+                "gatewayIPConfigurations": [
+                    {
+                        "name": "appGatewayIpConfig",
+                        "properties": {
+                            "subnet": {
+                                "id": "[variables('gwSubnetResourceId')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendIPConfigurations": [
+                    {
+                        "name": "appGatewayFrontendIP",
+                        "properties": {
+                            "PublicIPAddress": {
+                                "id": "[variables('appGWPublicIPRef')]"
+                            }
+                        }
+                    }
+                ],
+                "frontendPorts": [
+                    {
+                        "name": "appGatewayFrontendPort",
+                        "properties": {
+                            "Port": 443
+                        }
+                    }
+                ],
+                "backendAddressPools": [
+                    {
+                        "name": "api-mgmt-backend-pool",
+                        "properties": {
+                            "BackendAddresses": [
+                                {
+                                    "IpAddress": "[reference(parameters('apiManagementResourceName'), '2017-03-01').privateIPAddresses[0]]"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "authenticationCertificates": [
+                    {
+                        "name": "api-mgmt-trustedroot-ca",
+                        "properties": {
+                            "data": "[parameters('trustedRootBase64PublicKey')]"
+                        }
+                    }
+                ],
+                "probes": [
+                    {
+                        "name": "api-mgmt-gateway-probe",
+                        "properties": {
+                            "host": "[parameters('apiManagementGatewayCustomDomain')]",
+                            "path": "/status-0123456789abcdef",
+                            "interval": 30,
+                            "timeout": 30,
+                            "unhealthyThreshold": 3
+                        }
+                    },
+                    {
+                        "name": "api-mgmt-portal-probe",
+                        "properties": {
+                            "host": "[parameters('apiManagementPortalCustomDomain')]",
+                            "path": "/signin",
+                            "interval": 30,
+                            "timeout": 30,
+                            "unhealthyThreshold": 3
+                        }
+                    }
+                ],
+                "backendHttpSettingsCollection": [
+                    {
+                        "name": "api-mgmt-gateway-https-settings",
+                        "properties": {
+                            "Port": 443,
+                            "Protocol": "Https",
+                            "CookieBasedAffinity": "Disabled",
+                            "probe": {
+                                "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-gateway-probe')]"
+                            },
+                            "authenticationCertificates": [
+                                {
+                                    "id": "[concat(variables('appGWRefId'), '/authenticationCertificates/api-mgmt-trustedroot-ca')]"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "api-mgmt-portal-https-settings",
+                        "properties": {
+                            "Port": 443,
+                            "Protocol": "Https",
+                            "CookieBasedAffinity": "Disabled",
+                            "probe": {
+                                "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-portal-probe')]"
+                            },
+                            "authenticationCertificates": [
+                                {
+                                    "id": "[concat(variables('appGWRefId'), '/authenticationCertificates/api-mgmt-trustedroot-ca')]"
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "httpListeners": [
+                    {
+                        "name": "api-mgmt-gateway-listener",
+                        "properties": {
+                            "FrontendIPConfiguration": {
+                                "Id": "[concat(variables('appGWRefId'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+                            },
+                            "FrontendPort": {
+                                "Id": "[concat(variables('appGWRefId'), '/frontendPorts/appGatewayFrontendPort')]"
+                            },
+                            "Protocol": "Https",
+                            "SslCertificate": {
+                                "Id": "[concat(variables('appGWRefId'), '/sslCertificates/appGatewaySslCert')]"
+                            },
+                            "hostName": "[parameters('apiManagementGatewayCustomDomain')]"
+                        }
+                    },
+                    {
+                        "name": "api-mgmt-portal-listener",
+                        "properties": {
+                            "FrontendIPConfiguration": {
+                                "Id": "[concat(variables('appGWRefId'), '/frontendIPConfigurations/appGatewayFrontendIP')]"
+                            },
+                            "FrontendPort": {
+                                "Id": "[concat(variables('appGWRefId'), '/frontendPorts/appGatewayFrontendPort')]"
+                            },
+                            "Protocol": "Https",
+                            "SslCertificate": {
+                                "Id": "[concat(variables('appGWRefId'), '/sslCertificates/appGatewaySslCert')]"
+                            },
+                            "hostName": "[parameters('apiManagementPortalCustomDomain')]"
+                        }
+                    }
+                ],
+                "requestRoutingRules": [
+                    {
+                        "Name": "api-mgmt-gateway-rule",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(variables('appGWRefId'), '/httpListeners/api-mgmt-gateway-listener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(variables('appGWRefId'), '/backendAddressPools/api-mgmt-backend-pool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(variables('appGWRefId'), '/backendHttpSettingsCollection/api-mgmt-gateway-https-settings')]"
+                            }
+                        }
+                    }
+                ]
             }
         }
     ],
