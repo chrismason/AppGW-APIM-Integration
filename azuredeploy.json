@@ -419,7 +419,8 @@
                             "path": "/status-0123456789abcdef",
                             "interval": 30,
                             "timeout": 30,
-                            "unhealthyThreshold": 3
+                            "unhealthyThreshold": 3,
+                            "protocol": "Https"
                         }
                     },
                     {
@@ -429,7 +430,8 @@
                             "path": "/signin",
                             "interval": 30,
                             "timeout": 30,
-                            "unhealthyThreshold": 3
+                            "unhealthyThreshold": 3,
+                            "protocol": "Https"
                         }
                     }
                 ],
@@ -514,6 +516,21 @@
                             },
                             "backendHttpSettings": {
                                 "id": "[concat(variables('appGWRefId'), '/backendHttpSettingsCollection/api-mgmt-gateway-https-settings')]"
+                            }
+                        }
+                    },
+                    {
+                        "Name": "api-mgmt-portal-rule",
+                        "properties": {
+                            "RuleType": "Basic",
+                            "httpListener": {
+                                "id": "[concat(variables('appGWRefId'), '/httpListeners/api-mgmt-portal-listener')]"
+                            },
+                            "backendAddressPool": {
+                                "id": "[concat(variables('appGWRefId'), '/backendAddressPools/api-mgmt-backend-pool')]"
+                            },
+                            "backendHttpSettings": {
+                                "id": "[concat(variables('appGWRefId'), '/backendHttpSettingsCollection/api-mgmt-portal-https-settings')]"
                             }
                         }
                     }
