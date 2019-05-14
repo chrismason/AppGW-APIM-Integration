@@ -182,7 +182,10 @@
                 "name": "Standard"
             },
             "properties": {
-                "publicIPAllocationMethod": "Static"
+                "publicIPAllocationMethod": "Dynamic",
+                "dnsSettings": {
+                    "domainNameLabel": "[variables('appGWPublicIPAddressName')]"
+                }
             }
         },
         {
@@ -397,7 +400,7 @@
                         "properties": {
                             "BackendAddresses": [
                                 {
-                                    "IpAddress": "[reference(parameters('apiManagementResourceName'), '2017-03-01').staticIps[0]]"
+                                    "IpAddress": "[reference(parameters('apiManagementResourceName'), '2017-03-01').staticIps[1]]"
                                 }
                             ]
                         }
