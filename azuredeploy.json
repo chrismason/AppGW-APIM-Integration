@@ -284,8 +284,7 @@
             "apiVersion": "2018-05-01",
             "name": "UpdateAPIMCertificates",
             "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]",
-                "[concat('Microsoft.KeyVault/vaults/accessPolicies/', parameters('existingKeyVaultName'), '/add')]"
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -340,8 +339,7 @@
             "location": "[resourceGroup().location]",
             "dependsOn": [
                 "[resourceId('Microsoft.ApiManagement/service/', parameters('apiManagementResourceName'))]",
-                "[concat('Microsoft.Network/publicIPAddresses/', variables('appGWPublicIPAddressName'))]",
-                "[concat('Microsoft.KeyVault/vaults/accessPolicies/', parameters('existingKeyVaultName'), '/add')]"
+                "[concat('Microsoft.Network/publicIPAddresses/', variables('appGWPublicIPAddressName'))]"
             ],
             "identity": {
                 "type": "UserAssigned",
