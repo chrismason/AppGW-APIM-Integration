@@ -441,6 +441,7 @@
                         "properties": {
                             "Port": 443,
                             "Protocol": "Https",
+                            "hostName": "[parameters('apiManagementGatewayCustomDomain')]",
                             "CookieBasedAffinity": "Disabled",
                             "probe": {
                                 "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-gateway-probe')]"
@@ -457,6 +458,7 @@
                         "properties": {
                             "Port": 443,
                             "Protocol": "Https",
+                            "hostName": "[parameters('apiManagementPortalCustomDomain')]",
                             "CookieBasedAffinity": "Disabled",
                             "probe": {
                                 "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-portal-probe')]"
