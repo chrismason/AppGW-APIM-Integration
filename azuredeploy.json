@@ -285,7 +285,7 @@
             "name": "UpdateAPIMCertificates",
             "dependsOn": [
                 "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]",
-                "[concat('Microsoft.KeyVault/vaults/accessPolicies', parameters('existingKeyVaultName'), '/add')]"
+                "[concat('Microsoft.KeyVault/vaults/accessPolicies/', parameters('existingKeyVaultName'), '/add')]"
             ],
             "properties": {
                 "mode": "Incremental",
