@@ -403,7 +403,7 @@
                         }
                     }
                 ],
-                "authenticationCertificates": [
+                "trustedRootCertificates": [
                     {
                         "name": "api-mgmt-trustedroot-ca",
                         "properties": {
@@ -443,9 +443,9 @@
                             "probe": {
                                 "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-gateway-probe')]"
                             },
-                            "authenticationCertificates": [
+                            "trustedRootCertificates": [
                                 {
-                                    "id": "[concat(variables('appGWRefId'), '/authenticationCertificates/api-mgmt-trustedroot-ca')]"
+                                    "id": "[concat(variables('appGWRefId'), '/trustedRootCertificates/api-mgmt-trustedroot-ca')]"
                                 }
                             ]
                         }
@@ -459,9 +459,9 @@
                             "probe": {
                                 "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-portal-probe')]"
                             },
-                            "authenticationCertificates": [
+                            "trustedRootCertificates": [
                                 {
-                                    "id": "[concat(variables('appGWRefId'), '/authenticationCertificates/api-mgmt-trustedroot-ca')]"
+                                    "id": "[concat(variables('appGWRefId'), '/trustedRootCertificates/api-mgmt-trustedroot-ca')]"
                                 }
                             ]
                         }
