@@ -344,7 +344,10 @@
                 "[concat('Microsoft.KeyVault/vaults/accessPolicies/', parameters('existingKeyVaultName'), '/add')]"
             ],
             "identity": {
-                "type": "SystemAssigned"
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                    "[variables('appGWManagedIdRef')]": {}
+                }
             },
             "properties": {
                 "sku": {
