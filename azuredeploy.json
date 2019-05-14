@@ -155,7 +155,6 @@
         }
     },
     "variables": {
-        "vnetId": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetResourceName'))]",
         "apimSubnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetResourceName'), parameters('apiManagementSubnetName'))]",
         "gwSubnetResourceId": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetResourceName'), parameters('appGWSubnetName'))]",
         "vnetNestedTemplateUri": "[uri(parameters('_artifactsLocation'), concat('nestedtemplates/vnet.json', parameters('_artifactsLocationSasToken')))]",
@@ -163,9 +162,17 @@
         "apimServiceIdentityResourceId": "[concat(resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName')),'/providers/Microsoft.ManagedIdentity/Identities/default')]",
         "appGWPublicIPAddressName": "[concat(parameters('appGWResourceName'), '-pip')]",
         "appGWPublicIPRef": "[resourceId('Microsoft.Network/publicIPAddresses',variables('appGWPublicIPAddressName'))]",
-        "appGWRefId": "[resourceId('Microsoft.Network/applicationGateways',parameters('appGWResourceName'))]"
+        "appGWRefId": "[resourceId('Microsoft.Network/applicationGateways',parameters('appGWResourceName'))]",
+        "appGWManagedIdName": "appgw-keyvault-msi",
+        "appGWManagedIdRef": "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities',variables('appGWManagedIdName'))]"
     },
     "resources": [
+        {
+            "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+            "apiVersion": "2015-08-31-preview",
+            "name": "[variables('appGWManagedIdName')]",
+            "location": "[resourceGroup().location]"
+        },
         {
             "type": "Microsoft.Network/publicIPAddresses",
             "apiVersion": "2018-10-01",
@@ -246,13 +253,23 @@
             "name": "[concat(parameters('existingKeyVaultName'), '/add')]",
             "apiVersion": "2015-06-01",
             "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]"
+                "[resourceId('Microsoft.ApiManagement/service/', parameters('apiManagementResourceName'))]",
+                "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('appGWManagedIdName'))]"
             ],
             "properties": {
                 "accessPolicies": [
                     {
                         "tenantId": "[reference(variables('apimServiceIdentityResourceId'), '2015-08-31-PREVIEW').tenantId]",
                         "objectId": "[reference(variables('apimServiceIdentityResourceId'), '2015-08-31-PREVIEW').principalId]",
+                        "permissions": {
+                            "secrets": [
+                                "get"
+                            ]
+                        }
+                    },
+                    {
+                        "tenantId": "[reference(variables('appGWManagedIdRef'), '2015-08-31-preview').tenantId]",
+                        "objectId": "[reference(variables('appGWManagedIdRef'), '2015-08-31-preview').principalId]",
                         "permissions": {
                             "secrets": [
                                 "get"
@@ -267,7 +284,8 @@
             "apiVersion": "2018-05-01",
             "name": "UpdateAPIMCertificates",
             "dependsOn": [
-                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]"
+                "[resourceId('Microsoft.ApiManagement/service', parameters('apiManagementResourceName'))]",
+                "[concat('Microsoft.KeyVault/vaults/accessPolicies', parameters('existingKeyVaultName'), '/add')]"
             ],
             "properties": {
                 "mode": "Incremental",
@@ -321,9 +339,9 @@
             "name": "[parameters('appGWResourceName')]",
             "location": "[resourceGroup().location]",
             "dependsOn": [
-                "Microsoft.Resources/deployments/BuildOrUpdateAPIMNetworking",
+                "[resourceId('Microsoft.ApiManagement/service/', parameters('apiManagementResourceName'))]",
                 "[concat('Microsoft.Network/publicIPAddresses/', variables('appGWPublicIPAddressName'))]",
-                "[concat('Microsoft.KeyVault/vaults/', parameters('keyVaultName'))]"
+                "[concat('Microsoft.KeyVault/vaults/accessPolicies/', parameters('existingKeyVaultName'), '/add')]"
             ],
             "identity": {
                 "type": "SystemAssigned"
