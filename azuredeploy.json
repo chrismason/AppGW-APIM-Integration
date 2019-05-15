@@ -51,6 +51,20 @@
                 "description": "Address range used by the App Gateway"
             }
         },
+        "appGWResourceName": {
+            "type": "string",
+            "defaultValue": "[concat('appgw-', uniqueString(resourceGroup().id))]",
+            "metadata": {
+                "description": "The name of the App GW resource"
+            }
+        },
+        "appGWPublicDNSPrefix": {
+            "type": "string",
+            "defaultValue": "[concat('appgw-', uniqueString(resourceGroup().id))]",
+            "metadata": {
+                "description": "The name of the App GW resource"
+            }
+        },
         "apiManagementResourceName": {
             "type": "string",
             "defaultValue": "[concat('apiservice-', uniqueString(resourceGroup().id))]",
@@ -102,13 +116,6 @@
             "defaultValue": 1,
             "metadata": {
                 "description": "The instance size of this API Management service."
-            }
-        },
-        "appGWResourceName": {
-            "type": "string",
-            "defaultValue": "[concat('appgw-', uniqueString(resourceGroup().id))]",
-            "metadata": {
-                "description": "The name of the App GW resource"
             }
         },
         "existingKeyVaultName": {
@@ -184,7 +191,7 @@
             "properties": {
                 "publicIPAllocationMethod": "Static",
                 "dnsSettings": {
-                    "domainNameLabel": "[variables('appGWPublicIPAddressName')]"
+                    "domainNameLabel": "[parameters('appGWPublicDNSPrefix')]"
                 }
             }
         },
