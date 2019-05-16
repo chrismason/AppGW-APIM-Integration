@@ -176,7 +176,7 @@
     "resources": [
         {
             "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
-            "apiVersion": "2015-08-31-preview",
+            "apiVersion": "2018-11-30",
             "name": "[variables('appGWManagedIdName')]",
             "location": "[resourceGroup().location]"
         },
@@ -246,6 +246,9 @@
                 "name": "[parameters('apiManagementSku')]",
                 "capacity": "[parameters('apiManagementSkuCount')]"
             },
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "properties": {
                 "publisherEmail": "[parameters('apiManagementPublisherEmail')]",
                 "publisherName": "[parameters('apiManagementPublisherName')]",
@@ -253,9 +256,6 @@
                 "virtualNetworkConfiguration": {
                     "subnetResourceId": "[variables('apimSubnetResourceId')]"
                 }
-            },
-            "identity": {
-                "type": "SystemAssigned"
             }
         },
         {
@@ -269,8 +269,8 @@
             "properties": {
                 "accessPolicies": [
                     {
-                        "tenantId": "[reference(variables('apimServiceIdentityResourceId'), '2015-08-31-PREVIEW').tenantId]",
-                        "objectId": "[reference(variables('apimServiceIdentityResourceId'), '2015-08-31-PREVIEW').principalId]",
+                        "tenantId": "[reference(variables('apimServiceIdentityResourceId'), '2018-11-30').tenantId]",
+                        "objectId": "[reference(variables('apimServiceIdentityResourceId'), '2018-11-30').principalId]",
                         "permissions": {
                             "secrets": [
                                 "get"
@@ -278,8 +278,8 @@
                         }
                     },
                     {
-                        "tenantId": "[reference(variables('appGWManagedIdRef'), '2015-08-31-preview').tenantId]",
-                        "objectId": "[reference(variables('appGWManagedIdRef'), '2015-08-31-preview').principalId]",
+                        "tenantId": "[reference(variables('appGWManagedIdRef'), '2018-11-30').tenantId]",
+                        "objectId": "[reference(variables('appGWManagedIdRef'), '2018-11-30').principalId]",
                         "permissions": {
                             "secrets": [
                                 "get"
