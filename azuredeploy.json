@@ -267,6 +267,7 @@
                 "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('appGWManagedIdName'))]"
             ],
             "properties": {
+                "mode": "Incremental",
                 "accessPolicies": [
                     {
                         "tenantId": "[reference(variables('apimServiceIdentityResourceId'), '2018-11-30').tenantId]",
