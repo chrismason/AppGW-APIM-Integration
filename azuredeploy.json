@@ -11,7 +11,7 @@
         },
         "vnetResourceName": {
             "type": "string",
-            "defaultValue": "GET-VNET-NAME",
+            "defaultValue": "virtualNetwork",
             "metadata": {
                 "description": "The name of the VNet"
             }
@@ -25,7 +25,7 @@
         },
         "apiManagementSubnetName": {
             "type": "string",
-            "defaultValue": "GEN-VNET-SUBNET1-NAME",
+            "defaultValue": "subnet-1",
             "metadata": {
                 "description": "The name of the API Management subnet"
             }
@@ -39,7 +39,7 @@
         },
         "appGWSubnetName": {
             "type": "string",
-            "defaultValue": "GEN-VNET-SUBNET2-NAME",
+            "defaultValue": "subnet-2",
             "metadata": {
                 "description": "The name of the App Gateway subnet"
             }
@@ -74,14 +74,14 @@
         },
         "apiManagementGatewayCustomDomain": {
             "type": "string",
-            "defaultValue": "apis.masondemos.com",
+            "defaultValue": "",
             "metadata": {
                 "description": "Custom domain used by the gateway / proxy of the API Management instance"
             }
         },
         "apiManagementPortalCustomDomain": {
             "type": "string",
-            "defaultValue": "apisportal.masondemos.com",
+            "defaultValue": "",
             "metadata": {
                 "description": "Custom domain used by the developer portal of the API Management instance"
             }
@@ -130,13 +130,6 @@
             "defaultValue": "",
             "metadata": {
                 "description": "Name of the private certificate loaded into Key Vault"
-            }
-        },
-        "trustedRootBase64PublicKey": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "The base-64 representation of the public key of the trusted root certificate for the custom domain"
             }
         },
         "tags": {
@@ -260,8 +253,8 @@
         },
         {
             "type": "Microsoft.KeyVault/vaults/accessPolicies",
+            "apiVersion": "2018-02-14",
             "name": "[concat(parameters('existingKeyVaultName'), '/add')]",
-            "apiVersion": "2015-06-01",
             "dependsOn": [
                 "[resourceId('Microsoft.ApiManagement/service/', parameters('apiManagementResourceName'))]",
                 "[concat('Microsoft.ManagedIdentity/userAssignedIdentities/', variables('appGWManagedIdName'))]"
@@ -414,14 +407,6 @@
                         }
                     }
                 ],
-                "trustedRootCertificates": [
-                    {
-                        "name": "api-mgmt-trustedroot-ca",
-                        "properties": {
-                            "data": "[parameters('trustedRootBase64PublicKey')]"
-                        }
-                    }
-                ],
                 "probes": [
                     {
                         "name": "api-mgmt-gateway-probe",
@@ -456,12 +441,7 @@
                             "CookieBasedAffinity": "Disabled",
                             "probe": {
                                 "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-gateway-probe')]"
-                            },
-                            "trustedRootCertificates": [
-                                {
-                                    "id": "[concat(variables('appGWRefId'), '/trustedRootCertificates/api-mgmt-trustedroot-ca')]"
-                                }
-                            ]
+                            }
                         }
                     },
                     {
@@ -473,12 +453,7 @@
                             "CookieBasedAffinity": "Disabled",
                             "probe": {
                                 "id": "[concat(variables('appGWRefId'), '/probes/api-mgmt-portal-probe')]"
-                            },
-                            "trustedRootCertificates": [
-                                {
-                                    "id": "[concat(variables('appGWRefId'), '/trustedRootCertificates/api-mgmt-trustedroot-ca')]"
-                                }
-                            ]
+                            }
                         }
                     }
                 ],
@@ -550,6 +525,5 @@
                 ]
             }
         }
-    ],
-    "outputs": {}
+    ]
 }
